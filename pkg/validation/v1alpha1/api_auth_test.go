@@ -293,6 +293,18 @@ spec:
       - jwksUrl: "https://fallback.example.com/jwks.json"`),
 		},
 		{
+			desc: "valid: keyless authentication",
+			manifest: []byte(`
+apiVersion: hub.traefik.io/v1alpha1
+kind: APIAuth
+metadata:
+  name: my-auth
+  namespace: default
+spec:
+  isDefault: true
+  keyless: {}`),
+		},
+		{
 			desc: "valid: not default",
 			manifest: []byte(`
 apiVersion: hub.traefik.io/v1alpha1
@@ -398,6 +410,20 @@ spec:
   jwt:
     appIdClaim: "client_id"
     signingSecretName: "jwt-secret"`),
+			wantErrs: field.ErrorList{{Type: field.ErrorTypeInvalid, Field: "spec", BadValue: "object", Detail: "exactly one authentication method must be specified"}},
+		},
+		{
+			desc: "multiple authentication methods specified with keyless",
+			manifest: []byte(`
+apiVersion: hub.traefik.io/v1alpha1
+kind: APIAuth
+metadata:
+  name: my-auth
+  namespace: default
+spec:
+  isDefault: true
+  keyless: {}
+  apiKey: {}`),
 			wantErrs: field.ErrorList{{Type: field.ErrorTypeInvalid, Field: "spec", BadValue: "object", Detail: "exactly one authentication method must be specified"}},
 		},
 		{

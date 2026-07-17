@@ -40,7 +40,7 @@ type APIAuth struct {
 }
 
 // APIAuthSpec configures the authentication for APIs.
-// +kubebuilder:validation:XValidation:message="exactly one authentication method must be specified",rule="[has(self.apiKey), has(self.jwt), has(self.ldap)].filter(x, x).size() == 1"
+// +kubebuilder:validation:XValidation:message="exactly one authentication method must be specified",rule="[has(self.apiKey), has(self.jwt), has(self.ldap), has(self.keyless)].filter(x, x).size() == 1"
 type APIAuthSpec struct {
 	// IsDefault specifies if this APIAuth should be used as the default API authentication method for the namespace.
 	// Only one APIAuth per namespace should have isDefault set to true.
@@ -53,6 +53,10 @@ type APIAuthSpec struct {
 	// JWT configures JWT authentication.
 	// +optional
 	JWT *JWTAuthSpec `json:"jwt,omitempty"`
+
+	// Keyless configures keyless authentication.
+	// +optional
+	Keyless *Keyless `json:"keyless,omitempty"`
 
 	// LDAP configures LDAP authentication.
 	// +optional
@@ -164,6 +168,9 @@ type JWTAuthSpec struct {
 	// +optional
 	ClientConfig *HTTPClientConfig `json:"clientConfig,omitempty"`
 }
+
+// Keyless defines a keyless authentication mechanism.
+type Keyless struct{}
 
 // APIAuthStatus is the status of an APIAuth.
 type APIAuthStatus struct {
