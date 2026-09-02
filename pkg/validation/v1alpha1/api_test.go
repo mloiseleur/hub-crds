@@ -72,7 +72,12 @@ spec:
           methods:
             - GET
             - OPTION
-    refreshInterval: 3m`),
+    refreshInterval: 3m
+  apiAuths:
+    - name: my-api-auth
+      operationFilter:
+        include:
+          - my-operation-set`),
 		},
 		{
 			desc: "missing resource namespace",
@@ -537,6 +542,128 @@ metadata:
 spec:
   versions: []`),
 			wantErrs: field.ErrorList{{Type: field.ErrorTypeInvalid, Field: "spec.versions", BadValue: int64(0), Detail: "spec.versions in body should have at least 1 items"}},
+		},
+		{
+			desc: "valid: apiAuths without operationFilter",
+			manifest: []byte(`
+apiVersion: hub.traefik.io/v1alpha1
+kind: API
+metadata:
+  name: my-api
+  namespace: my-ns
+spec:
+  apiAuths:
+    - name: my-api-auth`),
+		},
+		{
+			desc: "valid: multiple apiAuths",
+			manifest: []byte(`
+apiVersion: hub.traefik.io/v1alpha1
+kind: API
+metadata:
+  name: my-api
+  namespace: my-ns
+spec:
+  openApiSpec:
+    path: /openapi.json
+    operationSets:
+    - name: my-operation-set
+      matchers:
+        - path: /foo
+  apiAuths:
+    - name: my-api-auth
+    - name: my-other-api-auth
+      operationFilter:
+        include:
+          - my-operation-set`),
+		},
+		{
+			desc: "apiAuths cannot be empty",
+			manifest: []byte(`
+apiVersion: hub.traefik.io/v1alpha1
+kind: API
+metadata:
+  name: my-api
+  namespace: my-ns
+spec:
+  apiAuths: []`),
+			wantErrs: field.ErrorList{{Type: field.ErrorTypeInvalid, Field: "spec.apiAuths", BadValue: int64(0), Detail: "spec.apiAuths in body should have at least 1 items"}},
+		},
+		{
+			desc: "missing apiAuths name",
+			manifest: []byte(`
+apiVersion: hub.traefik.io/v1alpha1
+kind: API
+metadata:
+  name: my-api
+  namespace: my-ns
+spec:
+  apiAuths:
+    - operationFilter:
+        include:
+          - my-operation-set`),
+			wantErrs: field.ErrorList{
+				{Type: field.ErrorTypeRequired, Field: "spec.apiAuths[0].name", BadValue: "", Detail: ""},
+				{Type: field.ErrorTypeInvalid, Field: "spec", BadValue: field.OmitValueType{}, Detail: "operationFilter.include must only reference operation sets defined in openApiSpec.operationSets"},
+			},
+		},
+		{
+			desc: "operationFilter referencing an undefined operation set",
+			manifest: []byte(`
+apiVersion: hub.traefik.io/v1alpha1
+kind: API
+metadata:
+  name: my-api
+  namespace: my-ns
+spec:
+  openApiSpec:
+    path: /openapi.json
+    operationSets:
+    - name: read
+      matchers:
+        - path: /foo
+  apiAuths:
+    - name: my-api-auth
+    - name: reader
+      operationFilter:
+        include:
+          - read
+          - missing`),
+			wantErrs: field.ErrorList{
+				{Type: field.ErrorTypeInvalid, Field: "spec", BadValue: field.OmitValueType{}, Detail: "operationFilter.include must only reference operation sets defined in openApiSpec.operationSets"},
+			},
+		},
+		{
+			desc: "operationFilter without an openApiSpec",
+			manifest: []byte(`
+apiVersion: hub.traefik.io/v1alpha1
+kind: API
+metadata:
+  name: my-api
+  namespace: my-ns
+spec:
+  apiAuths:
+    - name: my-api-auth
+    - name: reader
+      operationFilter:
+        include:
+          - read`),
+			wantErrs: field.ErrorList{
+				{Type: field.ErrorTypeInvalid, Field: "spec", BadValue: field.OmitValueType{}, Detail: "operationFilter.include must only reference operation sets defined in openApiSpec.operationSets"},
+			},
+		},
+		{
+			desc: "valid: apiAuths with an empty operationFilter",
+			manifest: []byte(`
+apiVersion: hub.traefik.io/v1alpha1
+kind: API
+metadata:
+  name: my-api
+  namespace: my-ns
+spec:
+  apiAuths:
+    - name: my-api-auth
+      operationFilter: {}`),
 		},
 	}
 
