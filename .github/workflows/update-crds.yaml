@@ -51,4 +51,3 @@ jobs:
             This PR was automatically created by ${{ github.workflow }} workflow on run [#${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).
 
             This was triggered by commit [${{ github.ref }}](https://github.com/${{ github.repository }}/commits/${{ github.sha }}) on [${{ github.repository }}](https://github.com/${{ github.repository }}).
-
